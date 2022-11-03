@@ -26,7 +26,7 @@
 static size_t g_msg_num = 0;
 
 // warmup runs not to measure
-const int warmups(10);
+const int warmups(20);
 
 static inline void evaluate(std::vector<float>& arr)
 {

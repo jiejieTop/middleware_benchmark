@@ -3,7 +3,7 @@
  * @GitHub       : https://github.com/jiejieTop
  * @Date         : 2022-03-16 13:56:02
  * @LastEditors  : jiejie
- * @LastEditTime : 2022-11-03 11:32:26
+ * @LastEditTime : 2022-11-03 11:47:06
  * @FilePath     : /middleware_benchmark/ecal/point_cloud/point_cloud_rec/src/point_cloud_rec.cpp
  * Copyright (c) 2022 jiejie, All Rights Reserved. Please keep the author
  * information and source code according to the license.
@@ -28,7 +28,7 @@
 #include "ros_helper.h"
 
 // warmup runs not to measure
-const int warmups(10);
+const int warmups(20);
 
 // data structure for later evaluation
 struct evaluate_data {

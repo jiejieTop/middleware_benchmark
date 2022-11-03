@@ -46,7 +46,7 @@
 #include "ros_helper.h"
 
 // warmup runs not to measure
-const int warmups(10);
+const int warmups(20);
 
 // data structure for later evaluation
 struct evaluate_data {
