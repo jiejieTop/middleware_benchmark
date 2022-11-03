@@ -3,7 +3,7 @@
  * @GitHub       : https://github.com/jiejieTop
  * @Date         : 2022-03-16 13:56:02
  * @LastEditors  : jiejie
- * @LastEditTime : 2022-11-03 10:53:21
+ * @LastEditTime : 2022-11-03 11:32:26
  * @FilePath     : /middleware_benchmark/ecal/point_cloud/point_cloud_rec/src/point_cloud_rec.cpp
  * Copyright (c) 2022 jiejie, All Rights Reserved. Please keep the author
  * information and source code according to the license.
@@ -189,6 +189,7 @@ void evaluate(evaluate_data* data_, const std::string& file_name_)
 
     total_ss << sum_msg << " " << avg_time << " " << min_time << " " << max_time << " ";
 
+    sum_msg = data_->comm_latency_array.size();
     sum_time = std::accumulate(data_->comm_latency_array.begin(), data_->comm_latency_array.end(), 0.0f);
     avg_time = sum_time / (sum_msg * 1.0);
     min_it = std::min_element(data_->comm_latency_array.begin(), data_->comm_latency_array.end());

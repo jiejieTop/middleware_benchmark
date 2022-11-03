@@ -187,6 +187,7 @@ void evaluate(evaluate_data* data_, const std::string& file_name_)
 
     total_ss << sum_msg << " " << avg_time << " " << min_time << " " << max_time << " ";
 
+    sum_msg = data_->comm_latency_array.size();
     sum_time = std::accumulate(data_->comm_latency_array.begin(), data_->comm_latency_array.end(), 0.0f);
     avg_time = sum_time / (sum_msg * 1.0);
     min_it = std::min_element(data_->comm_latency_array.begin(), data_->comm_latency_array.end());
