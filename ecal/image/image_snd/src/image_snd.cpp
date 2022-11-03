@@ -3,7 +3,7 @@
  * @GitHub       : https://github.com/jiejieTop
  * @Date         : 2022-10-28 16:31:37
  * @LastEditors  : jiejie
- * @LastEditTime : 2022-11-03 11:01:32
+ * @LastEditTime : 2022-11-03 11:29:09
  * @FilePath     : /middleware_benchmark/ecal/image/image_snd/src/image_snd.cpp
  * Copyright (c) 2022 jiejie, All Rights Reserved. Please keep the author
  * information and source code according to the license.
@@ -235,6 +235,9 @@ int main(int argc, char** argv)
     while (ros::ok()) {
         // sleep 500 ms
         eCAL::Process::SleepMS(500);
+        if (g_msg_num >= runs.getValue()) {
+            break;
+        }
     }
 
     for (auto& th : thread_vec) {
