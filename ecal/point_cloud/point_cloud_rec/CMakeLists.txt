@@ -1,0 +1,46 @@
+# ========================= eCAL LICENSE =================================
+#
+# Copyright (C) 2016 - 2019 Continental Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#      http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ========================= eCAL LICENSE =================================
+
+cmake_minimum_required(VERSION 3.10)
+
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
+
+project(ecal_demo_point_cloud_rec)
+
+find_package(eCAL REQUIRED)
+# find_package(Protobuf REQUIRED)
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/ros.cmake)
+
+set(point_cloud_rec_src
+    src/point_cloud_rec.cpp
+    src/ros_helper.cc
+)
+
+set(point_cloud_rec_proto
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/protobuf/point_cloud.proto    
+)
+add_executable(${PROJECT_NAME} ${point_cloud_rec_src})
+PROTOBUF_TARGET_CPP(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/protobuf ${point_cloud_rec_proto})
+
+target_link_libraries(${PROJECT_NAME}
+    eCAL::core
+    protobuf::libprotobuf
+    ${ROS_DEPEND_PACKAGE_LIBS}
+)
+
