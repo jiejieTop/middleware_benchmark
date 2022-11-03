@@ -326,8 +326,8 @@ int main(int argc, char** argv)
     }
 
     while (!stop) {
-        // sleep 100 ms
-        eCAL::Process::SleepMS(100);
+        // sleep 500 ms
+        eCAL::Process::SleepMS(500);
     }
 
     eCAL::Process::SleepMS(1000);
