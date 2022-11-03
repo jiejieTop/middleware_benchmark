@@ -1,0 +1,11 @@
+build/
+.vscode/
+.idea/
+evaluate/
+.cmake_version.in
+*.deb
+*.bak
+*.zip
+*.tar
+*.db
+~/
