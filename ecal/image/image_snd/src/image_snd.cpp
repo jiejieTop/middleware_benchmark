@@ -3,7 +3,7 @@
  * @GitHub       : https://github.com/jiejieTop
  * @Date         : 2022-10-28 16:31:37
  * @LastEditors  : jiejie
- * @LastEditTime : 2022-11-03 11:29:09
+ * @LastEditTime : 2022-11-03 11:51:27
  * @FilePath     : /middleware_benchmark/ecal/image/image_snd/src/image_snd.cpp
  * Copyright (c) 2022 jiejie, All Rights Reserved. Please keep the author
  * information and source code according to the license.
@@ -144,7 +144,7 @@ int main(int argc, char** argv)
         ecal_image_pub_vec.push_back(mid_pub);
 
         ros::ros_helper::instance().subscribe<sensor_msgs::Image>(
-            "/mid_cam", 10,
+            "/mid_image", 10,
             (boost::function<void(const sensor_msgs::Image::ConstPtr&)>)[&](const sensor_msgs::Image::ConstPtr& msg) {
                 mid_image_queue.push(msg);
             });
@@ -166,13 +166,13 @@ int main(int argc, char** argv)
         ecal_image_pub_vec.push_back(left_pub);
 
         ros::ros_helper::instance().subscribe<sensor_msgs::Image>(
-            "/mid_cam", 10,
+            "/mid_image", 10,
             (boost::function<void(const sensor_msgs::Image::ConstPtr&)>)[&](const sensor_msgs::Image::ConstPtr& msg) {
                 mid_image_queue.push(msg);
             });
 
         ros::ros_helper::instance().subscribe<sensor_msgs::Image>(
-            "/left_cam", 10,
+            "/left_image", 10,
             (boost::function<void(const sensor_msgs::Image::ConstPtr&)>)[&](const sensor_msgs::Image::ConstPtr& msg) {
                 left_image_queue.push(msg);
             });
@@ -203,19 +203,19 @@ int main(int argc, char** argv)
         ecal_image_pub_vec.push_back(right_pub);
 
         ros::ros_helper::instance().subscribe<sensor_msgs::Image>(
-            "/mid_cam", 10,
+            "/mid_image", 10,
             (boost::function<void(const sensor_msgs::Image::ConstPtr&)>)[&](const sensor_msgs::Image::ConstPtr& msg) {
                 mid_image_queue.push(msg);
             });
 
         ros::ros_helper::instance().subscribe<sensor_msgs::Image>(
-            "/left_cam", 10,
+            "/left_image", 10,
             (boost::function<void(const sensor_msgs::Image::ConstPtr&)>)[&](const sensor_msgs::Image::ConstPtr& msg) {
                 left_image_queue.push(msg);
             });
 
         ros::ros_helper::instance().subscribe<sensor_msgs::Image>(
-            "/right_cam", 10,
+            "/right_image", 10,
             (boost::function<void(const sensor_msgs::Image::ConstPtr&)>)[&](const sensor_msgs::Image::ConstPtr& msg) {
                 right_image_queue.push(msg);
             });
