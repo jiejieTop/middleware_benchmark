@@ -3,7 +3,7 @@
  * @GitHub       : https://github.com/jiejieTop
  * @Date         : 2022-03-16 13:56:02
  * @LastEditors  : jiejie
- * @LastEditTime : 2022-11-07 14:32:17
+ * @LastEditTime : 2022-11-07 15:07:57
  * @FilePath     : /middleware_benchmark/ecal/point_cloud/point_cloud_rec/src/point_cloud_rec.cpp
  * Copyright (c) 2022 jiejie, All Rights Reserved. Please keep the author
  * information and source code according to the license.
@@ -229,7 +229,7 @@ void evaluate(evaluate_data* data_, const std::string& file_name_)
     ss << "ROS to eCAL PointCloud min latency           : " << min_time << " ms @ " << min_pos << std::endl;
     ss << "ROS to eCAL PointCloud max latency           : " << max_time << " ms @ " << max_pos << std::endl;
 
-    total_ss << data_->send_count << " " << sum_msg << " " << seq_start << " ";
+    total_ss << data_->send_count << " " << sum_msg + warmups << " " << seq_start << " ";
 
     total_ss << avg_time << " " << min_time << " " << max_time << " ";
 
