@@ -3,7 +3,7 @@
  * @GitHub       : https://github.com/jiejieTop
  * @Date         : 2022-03-16 13:56:02
  * @LastEditors  : jiejie
- * @LastEditTime : 2022-11-07 12:07:43
+ * @LastEditTime : 2022-11-07 14:30:38
  * @FilePath     : /middleware_benchmark/ecal/image/image_rec/src/image_rec.cpp
  * Copyright (c) 2022 jiejie, All Rights Reserved. Please keep the author
  * information and source code according to the license.
@@ -46,7 +46,7 @@
 #include "ros_helper.h"
 
 // warmup runs not to measure
-const int warmups(20);
+const int warmups(5);
 
 // data structure for later evaluation
 struct evaluate_data {
@@ -163,6 +163,21 @@ void evaluate(evaluate_data* data_, const std::string& file_name_)
     std::stringstream total_ss;
     std::stringstream ss;
     float total_latency = 0.0;
+
+    // remove warmup runs
+    if (data_->comm_latency_array.size() >= warmups) {
+        data_->comm_latency_array.erase(data_->comm_latency_array.begin(), data_->comm_latency_array.begin() + warmups);
+    }
+
+    if (data_->ecal_to_ros_latency_array.size() >= warmups) {
+        data_->ecal_to_ros_latency_array.erase(data_->ecal_to_ros_latency_array.begin(),
+                                               data_->ecal_to_ros_latency_array.begin() + warmups);
+    }
+
+    if (data_->ros_to_ecal_latency_array.size() >= warmups) {
+        data_->ros_to_ecal_latency_array.erase(data_->ros_to_ecal_latency_array.begin(),
+                                               data_->ros_to_ecal_latency_array.begin() + warmups);
+    }
 
     for (int i = 0; i < data_->send_count; i++) {
         if (data_->seq_array[i] != 0) {
