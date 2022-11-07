@@ -3,7 +3,7 @@
  * @GitHub       : https://github.com/jiejieTop
  * @Date         : 2022-10-28 16:31:37
  * @LastEditors  : jiejie
- * @LastEditTime : 2022-11-03 11:51:27
+ * @LastEditTime : 2022-11-07 11:44:01
  * @FilePath     : /middleware_benchmark/ecal/image/image_snd/src/image_snd.cpp
  * Copyright (c) 2022 jiejie, All Rights Reserved. Please keep the author
  * information and source code according to the license.
@@ -61,7 +61,7 @@ static void ros_to_ecal_image_send(std::queue<sensor_msgs::Image::ConstPtr>& ros
 
     pb::Image image;
     std::vector<float> ros_to_ecal_latency_array;
-
+    uint32_t seq = 0;
     while (1) {
         if (ros_image_queue.empty()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -70,10 +70,11 @@ static void ros_to_ecal_image_send(std::queue<sensor_msgs::Image::ConstPtr>& ros
 
         auto ros_image = ros_image_queue.front();
 
+        seq++;
         auto start_time =
             std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch())
                 .count();
-        image.set_seq(ros_image->header.seq);
+        image.set_seq(seq);
         image.set_timestamp(ros_image->header.stamp.sec * 1000000 + ros_image->header.stamp.nsec / 1000);  // us
         image.set_frame_id(ros_image->header.frame_id);
         image.set_height(ros_image->height);
@@ -82,6 +83,7 @@ static void ros_to_ecal_image_send(std::queue<sensor_msgs::Image::ConstPtr>& ros
         image.set_is_bigendian(ros_image->is_bigendian);
         image.set_step(ros_image->step);
         image.set_data(ros_image->data.data(), ros_image->data.size());
+        image.set_send_count(runs + warmups);
         auto end_time =
             std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch())
                 .count();

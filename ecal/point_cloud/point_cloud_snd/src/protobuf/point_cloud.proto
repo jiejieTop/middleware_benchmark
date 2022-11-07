@@ -25,5 +25,6 @@ message PointCloud2
   bool is_dense = 11;
   uint64 send_time = 12;
   float convert_time = 13;
+  uint32 send_count = 14;
 }
 

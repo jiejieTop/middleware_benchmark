@@ -3,7 +3,7 @@
  * @GitHub       : https://github.com/jiejieTop
  * @Date         : 2022-10-28 16:31:37
  * @LastEditors  : jiejie
- * @LastEditTime : 2022-11-03 11:28:31
+ * @LastEditTime : 2022-11-07 12:10:31
  * @FilePath     : /middleware_benchmark/ecal/point_cloud/point_cloud_snd/src/point_cloud_snd.cpp
  * Copyright (c) 2022 jiejie, All Rights Reserved. Please keep the author
  * information and source code according to the license.
@@ -61,7 +61,7 @@ static void ros_to_ecal_point_cloud_send(std::queue<sensor_msgs::PointCloud2::Co
 
     pb::PointCloud2 point_cloud;
     std::vector<float> ros_to_ecal_latency_array;
-
+    uint32_t seq = 0;
     while (1) {
         if (ros_point_cloud_queue.empty()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -70,10 +70,11 @@ static void ros_to_ecal_point_cloud_send(std::queue<sensor_msgs::PointCloud2::Co
 
         auto ros_point_cloud = ros_point_cloud_queue.front();
 
+        seq++;
         auto start_time =
             std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch())
                 .count();
-        point_cloud.set_seq(ros_point_cloud->header.seq);
+        point_cloud.set_seq(seq);
         point_cloud.set_timestamp(ros_point_cloud->header.stamp.sec * 1000000
                                   + ros_point_cloud->header.stamp.nsec / 1000);  // us
         point_cloud.set_frame_id(ros_point_cloud->header.frame_id);
@@ -83,6 +84,7 @@ static void ros_to_ecal_point_cloud_send(std::queue<sensor_msgs::PointCloud2::Co
         point_cloud.set_point_step(ros_point_cloud->point_step);
         point_cloud.set_row_step(ros_point_cloud->row_step);
         point_cloud.set_is_dense(ros_point_cloud->is_dense);
+        point_cloud.set_send_count(runs + warmups);
 
         point_cloud.set_data(ros_point_cloud->data.data(), ros_point_cloud->data.size());
 

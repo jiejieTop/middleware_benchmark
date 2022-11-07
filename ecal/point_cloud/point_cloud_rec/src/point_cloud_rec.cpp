@@ -3,7 +3,7 @@
  * @GitHub       : https://github.com/jiejieTop
  * @Date         : 2022-03-16 13:56:02
  * @LastEditors  : jiejie
- * @LastEditTime : 2022-11-03 11:47:06
+ * @LastEditTime : 2022-11-07 12:09:18
  * @FilePath     : /middleware_benchmark/ecal/point_cloud/point_cloud_rec/src/point_cloud_rec.cpp
  * Copyright (c) 2022 jiejie, All Rights Reserved. Please keep the author
  * information and source code according to the license.
@@ -34,10 +34,13 @@ const int warmups(20);
 struct evaluate_data {
     evaluate_data()
     {
+        seq_array.reserve(100000);
         comm_latency_array.reserve(100000);
         ecal_to_ros_latency_array.reserve(100000);
         ros_to_ecal_latency_array.reserve(100000);
     };
+    uint32_t send_count;
+    std::vector<uint32_t> seq_array;
     std::vector<float> comm_latency_array;
     std::vector<float> ecal_to_ros_latency_array;
     std::vector<float> ros_to_ecal_latency_array;
@@ -115,6 +118,17 @@ void OnPointCloud2(const char* topic_name_, const pb::PointCloud2& point_cloud_,
     data->ecal_to_ros_latency_array.push_back((end_time - start_time) / 1000.0);
     data->ros_to_ecal_latency_array.push_back(point_cloud_.convert_time());
 
+    while (data->seq_array.size() < point_cloud_.seq() - 1) {
+        data->seq_array.push_back(0);
+    }
+    if (data->seq_array.size() >= point_cloud_.seq() - 1) {
+        data->seq_array[point_cloud_.seq() - 1] = point_cloud_.seq();
+    }
+    data->seq_array.push_back(point_cloud_.seq());
+    if (data->send_count < point_cloud_.send_count()) {
+        data->send_count = point_cloud_.send_count();
+    }
+
     ros::ros_helper::instance().publish("/ecal/" + std::string(topic_name_), ros_point_cloud);
 }
 
@@ -146,24 +160,37 @@ bool mkdirs(std::string path)
 // evaluation
 void evaluate(evaluate_data* data_, const std::string& file_name_)
 {
+    uint32_t loss = 0;
+    uint32_t seq_start = 0;
     std::stringstream total_ss;
     std::stringstream ss;
     float total_latency = 0.0;
 
-    // remove warmup runs
-    if (data_->comm_latency_array.size() >= warmups) {
-        data_->comm_latency_array.erase(data_->comm_latency_array.begin(), data_->comm_latency_array.begin() + warmups);
+    for (int i = 0; i < data_->send_count; i++) {
+        if (data_->seq_array[i] != 0) {
+            if (seq_start == 0) {
+                seq_start = i;
+                break;
+            }
+        }
     }
 
-    if (data_->ecal_to_ros_latency_array.size() >= warmups) {
-        data_->ecal_to_ros_latency_array.erase(data_->ecal_to_ros_latency_array.begin(),
-                                               data_->ecal_to_ros_latency_array.begin() + warmups);
+    std::cout << "seq start : " << seq_start << std::endl;
+
+    std::cout << "loss data seq: ";
+    for (int i = 0; i < data_->send_count; i++) {
+        if (data_->seq_array[i] == 0) {
+            std::cout << i + 1 << " ";
+            loss++;
+        }
     }
 
-    if (data_->ros_to_ecal_latency_array.size() >= warmups) {
-        data_->ros_to_ecal_latency_array.erase(data_->ros_to_ecal_latency_array.begin(),
-                                               data_->ros_to_ecal_latency_array.begin() + warmups);
-    }
+    std::cout << std::endl;
+
+    auto loss_rate = (((loss - seq_start) * 1.0) / ((data_->send_count - seq_start) * 1.0)) * 100;
+
+    std::cout << "loss message count : " << (loss - seq_start) << std::endl;
+    std::cout << "loss rate : " << loss_rate << " %" << std::endl;
 
     // evaluate all
     size_t sum_msg = data_->comm_latency_array.size();
@@ -187,7 +214,9 @@ void evaluate(evaluate_data* data_, const std::string& file_name_)
     ss << "ROS to eCAL PointCloud min latency           : " << min_time << " ms @ " << min_pos << std::endl;
     ss << "ROS to eCAL PointCloud max latency           : " << max_time << " ms @ " << max_pos << std::endl;
 
-    total_ss << sum_msg << " " << avg_time << " " << min_time << " " << max_time << " ";
+    total_ss << data_->send_count << " " << sum_msg << " " << seq_start << " ";
+
+    total_ss << avg_time << " " << min_time << " " << max_time << " ";
 
     sum_msg = data_->comm_latency_array.size();
     sum_time = std::accumulate(data_->comm_latency_array.begin(), data_->comm_latency_array.end(), 0.0f);
@@ -235,7 +264,7 @@ void evaluate(evaluate_data* data_, const std::string& file_name_)
 
     total_ss << avg_time << " " << min_time << " " << max_time << " ";
 
-    total_ss << total_latency << " " << mb_per_sec << " " << msg_per_sec << std::endl;
+    total_ss << total_latency << " " << mb_per_sec << " " << msg_per_sec << " " << loss_rate << std::endl << std::endl;
 
     ss << "--------------------------------------------" << std::endl;
 
