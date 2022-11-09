@@ -3,7 +3,7 @@
  * @GitHub       : https://github.com/jiejieTop
  * @Date         : 2022-03-16 13:56:02
  * @LastEditors  : jiejie
- * @LastEditTime : 2022-11-09 17:46:03
+ * @LastEditTime : 2022-11-09 19:50:37
  * @FilePath     : /middleware_benchmark/ecal/point_cloud/point_cloud_rec/src/point_cloud_rec.cpp
  * Copyright (c) 2022 jiejie, All Rights Reserved. Please keep the author
  * information and source code according to the license.
@@ -32,7 +32,13 @@ const int warmups(5);
 
 // data structure for later evaluation
 struct evaluate_data {
-    evaluate_data(){};
+    evaluate_data()
+    {
+        seq_array.reserve(10000);
+        comm_latency_array.reserve(10000);
+        ecal_to_ros_latency_array.reserve(10000);
+        ros_to_ecal_latency_array.reserve(10000);
+    };
     uint32_t send_count;
     std::vector<uint32_t> seq_array;
     std::vector<float> comm_latency_array;
@@ -55,11 +61,8 @@ void OnPointCloud2(const char* topic_name_, const pb::PointCloud2& point_cloud_,
     auto it = evaluate_map.find(topic_name_);
     if (it == evaluate_map.end()) {
         data = new evaluate_data();
-        data->comm_latency_array.reserve(point_cloud_.send_count());
-        data->ecal_to_ros_latency_array.reserve(point_cloud_.send_count());
-        data->ros_to_ecal_latency_array.reserve(point_cloud_.send_count());
-        data->seq_array.reserve(point_cloud_.send_count());
         evaluate_map[topic_name_] = data;
+        data->send_count = point_cloud_.send_count();
     } else {
         data = it->second;
     }
@@ -116,16 +119,17 @@ void OnPointCloud2(const char* topic_name_, const pb::PointCloud2& point_cloud_,
     data->ecal_to_ros_latency_array.push_back((end_time - start_time) / 1000.0);
     data->ros_to_ecal_latency_array.push_back(point_cloud_.convert_time());
 
-    while ((data->seq_array.size() < point_cloud_.seq()) && (data->seq_array.size() < point_cloud_.send_count())) {
-        data->seq_array.push_back(0);
-    }
-    if ((data->seq_array.size() >= point_cloud_.seq() - 1) && (data->seq_array.size() < point_cloud_.send_count())) {
-        data->seq_array[point_cloud_.seq() - 1] = point_cloud_.seq();
-    }
-    data->seq_array.push_back(point_cloud_.seq());
     if (data->send_count < point_cloud_.send_count()) {
         data->send_count = point_cloud_.send_count();
     }
+
+    while ((data->seq_array.size() < point_cloud_.seq() - 1) && (data->seq_array.size() < data->send_count)) {
+        data->seq_array.push_back(0);
+    }
+    if ((data->seq_array.size() >= point_cloud_.seq() - 1) && (data->seq_array.size() < data->send_count)) {
+        data->seq_array[point_cloud_.seq() - 1] = point_cloud_.seq();
+    }
+    data->seq_array.push_back(point_cloud_.seq());
 
     ros::ros_helper::instance().publish("/ecal/" + std::string(topic_name_), ros_point_cloud);
 }
@@ -202,7 +206,7 @@ void evaluate(evaluate_data* data_, const std::string& file_name_)
 
     auto loss_rate = (((loss - seq_start) * 1.0) / ((data_->send_count - seq_start) * 1.0)) * 100;
 
-    std::cout << "loss message count : " << (loss - seq_start) << std::endl;
+    std::cout << "loss message count : " << (((loss - seq_start) < 0 ? 0 : (loss - seq_start))) << std::endl;
     std::cout << "loss rate : " << loss_rate << " %" << std::endl;
 
     // evaluate all

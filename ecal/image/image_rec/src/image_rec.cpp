@@ -3,28 +3,10 @@
  * @GitHub       : https://github.com/jiejieTop
  * @Date         : 2022-03-16 13:56:02
  * @LastEditors  : jiejie
- * @LastEditTime : 2022-11-09 17:44:29
+ * @LastEditTime : 2022-11-09 19:51:57
  * @FilePath     : /middleware_benchmark/ecal/image/image_rec/src/image_rec.cpp
  * Copyright (c) 2022 jiejie, All Rights Reserved. Please keep the author
  * information and source code according to the license.
- */
-/* ========================= eCAL LICENSE =================================
- *
- * Copyright (C) 2016 - 2019 Continental Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * ========================= eCAL LICENSE =================================
  */
 
 #include <ecal/ecal.h>
@@ -50,7 +32,13 @@ const int warmups(5);
 
 // data structure for later evaluation
 struct evaluate_data {
-    evaluate_data(){};
+    evaluate_data()
+    {
+        seq_array.reserve(10000);
+        comm_latency_array.reserve(10000);
+        ecal_to_ros_latency_array.reserve(10000);
+        ros_to_ecal_latency_array.reserve(10000);
+    };
     uint32_t send_count;
     std::vector<uint32_t> seq_array;
     std::vector<float> comm_latency_array;
@@ -72,11 +60,8 @@ void OnImage(const char* topic_name_, const pb::Image& image_, const long long t
     auto it = evaluate_map.find(topic_name_);
     if (it == evaluate_map.end()) {
         data = new evaluate_data();
-        data->comm_latency_array.reserve(image_.send_count());
-        data->ecal_to_ros_latency_array.reserve(image_.send_count());
-        data->ros_to_ecal_latency_array.reserve(image_.send_count());
-        data->seq_array.reserve(image_.send_count());
         evaluate_map[topic_name_] = data;
+        data->send_count = image_.send_count();
     } else {
         data = it->second;
     }
@@ -114,16 +99,17 @@ void OnImage(const char* topic_name_, const pb::Image& image_, const long long t
     data->ecal_to_ros_latency_array.push_back((end_time - start_time) / 1000.0);
     data->ros_to_ecal_latency_array.push_back(image_.convert_time());
 
-    while ((data->seq_array.size() < image_.seq()) && (data->seq_array.size() < image_.send_count())) {
-        data->seq_array.push_back(0);
-    }
-    if ((data->seq_array.size() >= image_.seq() - 1) && (data->seq_array.size() < image_.send_count())) {
-        data->seq_array[image_.seq() - 1] = image_.seq();
-    }
-    data->seq_array.push_back(image_.seq());
     if (data->send_count < image_.send_count()) {
         data->send_count = image_.send_count();
     }
+
+    while ((data->seq_array.size() < image_.seq() - 1) && (data->seq_array.size() < data->send_count)) {
+        data->seq_array.push_back(0);
+    }
+    if ((data->seq_array.size() >= image_.seq() - 1) && (data->seq_array.size() < data->send_count)) {
+        data->seq_array[image_.seq() - 1] = image_.seq();
+    }
+    data->seq_array.push_back(image_.seq());
 
     ros::ros_helper::instance().publish("/ecal/" + std::string(topic_name_), ros_image);
 }
@@ -200,7 +186,7 @@ void evaluate(evaluate_data* data_, const std::string& file_name_)
 
     auto loss_rate = (((loss - seq_start) * 1.0) / ((data_->send_count - seq_start) * 1.0)) * 100;
 
-    std::cout << "loss message count : " << (loss - seq_start) << std::endl;
+    std::cout << "loss message count : " << (((loss - seq_start) < 0 ? 0 : (loss - seq_start))) << std::endl;
     std::cout << "loss rate : " << loss_rate << " %" << std::endl;
 
     // evaluate all
