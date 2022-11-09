@@ -3,7 +3,7 @@
  * @GitHub       : https://github.com/jiejieTop
  * @Date         : 2022-03-16 13:56:02
  * @LastEditors  : jiejie
- * @LastEditTime : 2022-11-07 15:08:18
+ * @LastEditTime : 2022-11-09 16:54:41
  * @FilePath     : /middleware_benchmark/ecal/image/image_rec/src/image_rec.cpp
  * Copyright (c) 2022 jiejie, All Rights Reserved. Please keep the author
  * information and source code according to the license.
@@ -50,13 +50,7 @@ const int warmups(5);
 
 // data structure for later evaluation
 struct evaluate_data {
-    evaluate_data()
-    {
-        seq_array.reserve(100000);
-        comm_latency_array.reserve(100000);
-        ecal_to_ros_latency_array.reserve(100000);
-        ros_to_ecal_latency_array.reserve(100000);
-    };
+    evaluate_data(){};
     uint32_t send_count;
     std::vector<uint32_t> seq_array;
     std::vector<float> comm_latency_array;
@@ -78,6 +72,10 @@ void OnImage(const char* topic_name_, const pb::Image& image_, const long long t
     auto it = evaluate_map.find(topic_name_);
     if (it == evaluate_map.end()) {
         data = new evaluate_data();
+        data->comm_latency_array.reserve(image_.send_count());
+        data->ecal_to_ros_latency_array.reserve(image_.send_count());
+        data->ros_to_ecal_latency_array.reserve(image_.send_count());
+        data->seq_array.reserve(image_.send_count());
         evaluate_map[topic_name_] = data;
     } else {
         data = it->second;
