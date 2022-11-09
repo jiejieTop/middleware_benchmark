@@ -3,7 +3,7 @@
  * @GitHub       : https://github.com/jiejieTop
  * @Date         : 2022-03-16 13:56:02
  * @LastEditors  : jiejie
- * @LastEditTime : 2022-11-09 16:56:12
+ * @LastEditTime : 2022-11-09 17:46:03
  * @FilePath     : /middleware_benchmark/ecal/point_cloud/point_cloud_rec/src/point_cloud_rec.cpp
  * Copyright (c) 2022 jiejie, All Rights Reserved. Please keep the author
  * information and source code according to the license.
@@ -116,10 +116,10 @@ void OnPointCloud2(const char* topic_name_, const pb::PointCloud2& point_cloud_,
     data->ecal_to_ros_latency_array.push_back((end_time - start_time) / 1000.0);
     data->ros_to_ecal_latency_array.push_back(point_cloud_.convert_time());
 
-    while (data->seq_array.size() < point_cloud_.seq() - 1) {
+    while ((data->seq_array.size() < point_cloud_.seq()) && (data->seq_array.size() < point_cloud_.send_count())) {
         data->seq_array.push_back(0);
     }
-    if (data->seq_array.size() >= point_cloud_.seq() - 1) {
+    if ((data->seq_array.size() >= point_cloud_.seq() - 1) && (data->seq_array.size() < point_cloud_.send_count())) {
         data->seq_array[point_cloud_.seq() - 1] = point_cloud_.seq();
     }
     data->seq_array.push_back(point_cloud_.seq());

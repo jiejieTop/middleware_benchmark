@@ -3,7 +3,7 @@
  * @GitHub       : https://github.com/jiejieTop
  * @Date         : 2022-03-16 13:56:02
  * @LastEditors  : jiejie
- * @LastEditTime : 2022-11-09 16:54:41
+ * @LastEditTime : 2022-11-09 17:44:29
  * @FilePath     : /middleware_benchmark/ecal/image/image_rec/src/image_rec.cpp
  * Copyright (c) 2022 jiejie, All Rights Reserved. Please keep the author
  * information and source code according to the license.
@@ -114,10 +114,10 @@ void OnImage(const char* topic_name_, const pb::Image& image_, const long long t
     data->ecal_to_ros_latency_array.push_back((end_time - start_time) / 1000.0);
     data->ros_to_ecal_latency_array.push_back(image_.convert_time());
 
-    while (data->seq_array.size() < image_.seq() - 1) {
+    while ((data->seq_array.size() < image_.seq()) && (data->seq_array.size() < image_.send_count())) {
         data->seq_array.push_back(0);
     }
-    if (data->seq_array.size() >= image_.seq() - 1) {
+    if ((data->seq_array.size() >= image_.seq() - 1) && (data->seq_array.size() < image_.send_count())) {
         data->seq_array[image_.seq() - 1] = image_.seq();
     }
     data->seq_array.push_back(image_.seq());
